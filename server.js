@@ -6,12 +6,10 @@ users = [];
 connections = [];
 games = [];
 
+app.use(express.static('client'));
 server.listen(process.env.PORT || 4000);
 console.log('Server running...');
 
-app.get('/', function(req, res){
-    res.sendFile(__dirname + '/index.html');
-});
 
 io.sockets.on('connection', function(socket){
     connections.push(socket);
@@ -20,7 +18,7 @@ io.sockets.on('connection', function(socket){
     // New Game
     socket.on('new game', function(data, callback){
         var gameName = "game" + games.length
-        var game = {name: gameName, users:[socket], usernames:[]}
+        var game = {name: gameName, users:[socket], usernames:[], messages:[]}
         games.push(game)
         socket.game = game
         
@@ -34,6 +32,7 @@ io.sockets.on('connection', function(socket){
             socket.game = game
             socket.game.users.push(socket)
             socket.emit('game found', socket.game.name);
+            retrieveMessages();
         } else {
             socket.emit('game not found');
         }
@@ -61,9 +60,28 @@ io.sockets.on('connection', function(socket){
     // Send Message
     socket.on('send message', function(data){
         for(var i = 0; i <  socket.game.users.length; i++){
-            socket.game.users[i].emit('new message', {msg: data, user: socket.username});
+            var msg = {msg: data, user: socket.username, type:'txt'};
+            socket.game.messages.push(msg);
+            socket.game.users[i].emit('new message', msg);
         }
     })
+
+    // Send Drawing
+    socket.on('send drawing', function(data){
+        for(var i = 0; i <  socket.game.users.length; i++){
+            var msg = {msg: data, user: socket.username, type:'img'};
+            socket.game.messages.push(msg);
+            socket.game.users[i].emit('new message', msg);
+        }
+    })
+
+    function retrieveMessages(){
+        if(socket.game){
+            for(var i = 0; i <  socket.game.messages.length; i++){
+                socket.emit('new message', socket.game.messages[i]);
+            }
+        }
+    }
 
     function updateUsernames(){
         if(socket.game){

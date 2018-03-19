@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>IO Gane</title>
+    <title>telestrat.io chat</title>
+    <link rel="shortcut icon" href="favicon2.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
         crossorigin="anonymous">
@@ -12,6 +13,9 @@
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
         crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <script language="javascript" type="text/javascript" src="libraries/p5.js"></script>
+    <script language="javascript" src="libraries/p5.dom.js"></script>
+    
     <style>
         body {
             font-family: 'Comfortaa', sans-serif;
@@ -38,7 +42,7 @@
 <body>
     <div class='container'>
         <div class="page-header">
-            <h1 style='margin: 0'>telestrat.io</h1>
+            <h1 style='margin: 0'>telestrāt.io</h1>
             <h2 style='margin: 0'>chat</h2>
         </div>
         <br>
@@ -95,24 +99,41 @@
             <div class='col-md-8'>
                 <div class='well'>
                     <h3>Messages:</h3>
-                    <div class="well" id='chat-well' style="background-color: white">
+                    <div class="well" id='chat-well' style="background-color: white; overflow-y: scroll; min-height: 100px">
                             <div id='chat'></div>
                     </div>
                     <hr>
-                    <form id='messageForm'>
-                        <div class='form-group'>
-                            <label>Enter Message</label>
-                            <textarea class='form-control' id='message'></textarea>
-                            <br/>
-                            <input type='submit' class='btn btn-primary' value="Send Message" />
+                    <div class='row'>
+                        <div class='col-md-6'>
+                            <form id='messageForm'>
+                                <div class='form-group'>
+                                    <label>Enter Message</label>
+                                    <input class='form-control' id='message'></input>
+                                    <br/>
+                                    <input type='submit' class='btn btn-primary' value="Send Message" />
+                                </div>
+                            </form>
                         </div>
-                    </form>
+
+                        <div class='col-md-6' id='drawingArea'>
+                            <div class='form-group'>
+                                <label>Draw Something</label>
+                                <div id="drawContainer" class='well' style='background-color: white; padding:0;'></div>
+                                <br/>
+                                <input type='submit' class='btn btn-primary' value="Send Drawing" id="sendDrawing"/>
+                                <button onclick='initializeCanvas()' class='btn btn-link'>Clear Canvas</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+
+    <script language="javascript" type="text/javascript" src="sketch.js"></script>
     <script>
+
         $(function () {
             var socket = io.connect();
             var $messageForm = $('#messageForm');
@@ -134,6 +155,9 @@
             var $userForm = $('#userForm');
             var $username = $('#username');
             var $users = $('#users');
+
+            var $drawContainer = $('#drawContainer');
+            var $sendDrawing = $('#sendDrawing')
 
             $newGameBtn.click(function () {
                 socket.emit('new game');
@@ -175,8 +199,17 @@
             })
 
             socket.on('new message', function (data) {
-                $chat.append('<div class=""><strong>' + data.user + ': </strong>' + data.msg + '</div>');
-                $chat.scrollTop(document.getElementById('chat').scrollHeight);
+                if(data.type == 'txt'){
+                    $chat.append('<div class=""><strong>' + data.user + ': </strong>' + data.msg + '</div>');
+                }
+                if(data.type == 'img'){
+                    $chat.append('<div class=""><strong>' + data.user + ':</strong></div>');
+                    let img=new Image();
+                    img.src=data.msg;
+                    document.getElementById('chat').appendChild(img);
+                    $('#chat').append("<br>");
+                }
+                $('#chat-well').scrollTop(document.getElementById('chat-well').scrollHeight);
             });
 
             $userForm.submit(function (e) {
@@ -185,6 +218,9 @@
                     if (data) {
                         $userFormArea.hide();
                         $messageArea.show();
+
+                        $('#chat-well').height(window.innerHeight - 650);
+                        // $('#chat-well').scrollTop(document.getElementById('chat-well').scrollHeight);
                     }
                 });
                 $username.val('');
@@ -196,6 +232,13 @@
                     html += '<li class="list-group-item">' + data[i] + '</li>';
                 }
                 $users.html(html);
+            });
+
+            // Drawing stuff
+            $sendDrawing.click(function (){
+                imgData = document.getElementById('defaultCanvas0').toDataURL()
+                socket.emit('send drawing', imgData);
+                initializeCanvas();
             });
         });
     </script>
