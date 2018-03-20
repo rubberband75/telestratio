@@ -68,7 +68,7 @@
                         <input class='form-control' id='gameIDInput'></input>
                         <label id='gameNotFound' style='color:#aa2222; display: none'>Game Not Found</label>
                         <br/>
-                        <input type='submit' class='btn btn-primary' value="Join Game" />
+                        <input type='submit' class='btn btn-primary' value="Join Game" id='gameIDSubmit'/>
                     </div>
                 </form>
             </div>
@@ -81,7 +81,7 @@
                         <label>Enter Username</label>
                         <input class='form-control' id='username'></input>
                         <br/>
-                        <input type='submit' class='btn btn-primary' value="Login" />
+                        <input type='submit' class='btn btn-primary' value="Login" id='usernameSubmit'/>
                     </div>
                 </form>
             </div>
@@ -99,7 +99,7 @@
             <div class='col-md-8'>
                 <div class='well'>
                     <h3>Messages:</h3>
-                    <div class="well" id='chat-well' style="background-color: white; overflow-y: scroll; min-height: 100px">
+                    <div class="well" id='chat-well' style="background-color: white; overflow-y: scroll; min-height: 300px">
                             <div id='chat'></div>
                     </div>
                     <hr>
@@ -110,7 +110,7 @@
                                     <label>Enter Message</label>
                                     <input class='form-control' id='message'></input>
                                     <br/>
-                                    <input type='submit' class='btn btn-primary' value="Send Message" />
+                                    <input type='submit' class='btn btn-primary' value="Send Message" id="messageSubmit"/>
                                 </div>
                             </form>
                         </div>
@@ -121,7 +121,7 @@
                                 <div id="drawContainer" class='well' style='background-color: white; padding:0;'></div>
                                 <br/>
                                 <input type='submit' class='btn btn-primary' value="Send Drawing" id="sendDrawing"/>
-                                <button onclick='initializeCanvas()' class='btn btn-link'>Clear Canvas</button>
+                                <button onclick='initializeCanvas()' class='btn btn-link' id="clearCanvas">Clear Canvas</button>
                             </div>
                         </div>
                     </div>
@@ -159,15 +159,20 @@
             var $drawContainer = $('#drawContainer');
             var $sendDrawing = $('#sendDrawing')
 
-            $newGameBtn.click(function () {
+
+            
+
+            $newGameBtn.click(function(){
                 socket.emit('new game');
                 $gameSelection.hide();
                 $userFormArea.show();
+                $('#username').focus();
             });
 
             $joinGameBtn.click(function () {
                 $gameSelection.hide();
                 $joinGameArea.show();
+                $('#gameIDInput').focus();
             });
 
             $joinGameForm.submit(function (e) {
@@ -184,14 +189,13 @@
                 $gameID.text(data)
                 $joinGameArea.hide();
                 $userFormArea.show();
+                $('#username').focus();
             });
 
             socket.on('game joined', function (data) {
                 $gameID.text(data)
             });
             
-
-
             $messageForm.submit(function (e) {
                 e.preventDefault();
                 socket.emit('send message', $message.val());
@@ -206,6 +210,8 @@
                     $chat.append('<div class=""><strong>' + data.user + ':</strong></div>');
                     let img=new Image();
                     img.src=data.msg;
+                    // img.style = "max-width: " + $('#chat').width() + "px";
+                    img.width=340;
                     document.getElementById('chat').appendChild(img);
                     $('#chat').append("<br>");
                 }
@@ -240,6 +246,51 @@
                 socket.emit('send drawing', imgData);
                 initializeCanvas();
             });
+
+
+
+            // Mobile Controlls
+            document.getElementById('newGameBtn').addEventListener('touchend', function(e){
+                e.target.click();
+            });
+            document.getElementById('joinGameBtn').addEventListener('touchend', function(e){
+                e.target.click();
+            });
+
+            document.getElementById('gameIDInput').addEventListener('touchend', function(e){
+                e.target.focus();
+            });
+            document.getElementById('gameIDSubmit').addEventListener('touchend', function(e){
+                e.target.click();
+            });
+
+
+            document.getElementById('username').addEventListener('touchend', function(e){
+                e.target.focus();
+            });
+            document.getElementById('usernameSubmit').addEventListener('touchend', function(e){
+                e.target.click();
+            });
+
+
+            document.getElementById('message').addEventListener('touchend', function(e){
+                e.target.focus();
+            });
+            document.getElementById('messageSubmit').addEventListener('touchend', function(e){
+                e.target.click();
+            });
+
+            document.getElementById('drawContainer').addEventListener('touchend', function(e){
+                e.preventDefault();
+            });
+            document.getElementById('sendDrawing').addEventListener('touchend', function(e){
+                e.target.click();
+            });
+            document.getElementById('clearCanvas').addEventListener('touchend', function(e){
+                e.target.click();
+            });
+            
+
         });
     </script>
 </body>
