@@ -280,8 +280,9 @@
                 e.target.click();
             });
 
-            document.getElementById('drawContainer').addEventListener('touchend', function(e){
+            document.getElementById('drawContainer').addEventListener('touchstart', function(e){
                 e.preventDefault();
+                console.log(e);
             });
             document.getElementById('sendDrawing').addEventListener('touchend', function(e){
                 e.target.click();
