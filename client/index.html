@@ -214,6 +214,7 @@
                     img.width=340;
                     document.getElementById('chat').appendChild(img);
                     $('#chat').append("<br>");
+                    $('#chat-well').scrollTop(document.getElementById('chat-well').scrollHeight);
                 }
                 $('#chat-well').scrollTop(document.getElementById('chat-well').scrollHeight);
             });
@@ -226,7 +227,7 @@
                         $messageArea.show();
 
                         $('#chat-well').height(window.innerHeight - 650);
-                        // $('#chat-well').scrollTop(document.getElementById('chat-well').scrollHeight);
+                        $('#chat-well').scrollTop(document.getElementById('chat-well').scrollHeight);
                     }
                 });
                 $username.val('');
@@ -273,6 +274,9 @@
             });
 
 
+            document.addEventListener('touchstart', function(e){
+                document.getElementById('message').blur();
+            });
             document.getElementById('message').addEventListener('touchend', function(e){
                 e.target.focus();
             });
