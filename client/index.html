@@ -93,6 +93,9 @@
                     <p style='color: grey'>Game ID: <code id="gameID"></code></p>
                     <h3>Online Users</h3>
                     <ul class='list-group' id='users'></ul>
+                    <div id='startGame' style='display: none'>
+                        <button id="startGameBtn" class="btn btn-primary">Start Game</button>
+                    </div>
                 </div>
             </div>
 
@@ -246,6 +249,12 @@
                 imgData = document.getElementById('defaultCanvas0').toDataURL()
                 socket.emit('send drawing', imgData);
                 initializeCanvas();
+            });
+
+
+
+            socket.on('allow start', function(){
+                $('#startGame').show();
             });
 
 

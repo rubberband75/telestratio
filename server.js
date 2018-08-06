@@ -2,6 +2,8 @@ var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io').listen(server);
+var shortid = require('shortid');
+shortid.characters('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@');
 users = [];
 connections = [];
 games = [];
@@ -17,7 +19,7 @@ io.sockets.on('connection', function (socket) {
 
     // New Game
     socket.on('new game', function (data, callback) {
-        var gameName = "game" + games.length
+        var gameName = shortid.generate().substring(0, 6).toUpperCase(); // "game" + games.length
         var game = { name: gameName, users: [socket], usernames: [], messages: [] }
         games.push(game)
         socket.game = game
@@ -33,6 +35,7 @@ io.sockets.on('connection', function (socket) {
             socket.game.users.push(socket)
             socket.emit('game found', socket.game.name);
             retrieveMessages();
+            
         } else {
             socket.emit('game not found');
         }
@@ -45,6 +48,7 @@ io.sockets.on('connection', function (socket) {
         users.push(socket.username);
         socket.game.usernames.push(socket.username);
         updateUsernames();
+        if(socket.game.users.length >= 3) allowGameStart(socket.game);
     })
 
     // Disconnect
@@ -78,6 +82,12 @@ io.sockets.on('connection', function (socket) {
             }
         }
     })
+
+    function allowGameStart(game){
+        for (var i = 0; i < game.users.length; i++) {
+            game.users[i].emit('allow start');
+        }
+    }
 
     function retrieveMessages() {
         if (socket.game) {
