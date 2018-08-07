@@ -15,7 +15,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script language="javascript" type="text/javascript" src="libraries/p5.js"></script>
     <script language="javascript" src="libraries/p5.dom.js"></script>
-    
+
     <style>
         body {
             font-family: 'Comfortaa', sans-serif;
@@ -68,7 +68,7 @@
                         <input class='form-control' id='gameIDInput'></input>
                         <label id='gameNotFound' style='color:#aa2222; display: none'>Game Not Found</label>
                         <br/>
-                        <input type='submit' class='btn btn-primary' value="Join Game" id='gameIDSubmit'/>
+                        <input type='submit' class='btn btn-primary' value="Join Game" id='gameIDSubmit' />
                     </div>
                 </form>
             </div>
@@ -81,7 +81,7 @@
                         <label>Enter Username</label>
                         <input class='form-control' id='username'></input>
                         <br/>
-                        <input type='submit' class='btn btn-primary' value="Login" id='usernameSubmit'/>
+                        <input type='submit' class='btn btn-primary' value="Login" id='usernameSubmit' />
                     </div>
                 </form>
             </div>
@@ -90,7 +90,9 @@
         <div class="row" id='messageArea'>
             <div class='col-md-4'>
                 <div class='well'>
-                    <p style='color: grey'>Game ID: <code id="gameID"></code></p>
+                    <p style='color: grey'>Game ID:
+                        <code id="gameID"></code>
+                    </p>
                     <h3>Online Users</h3>
                     <ul class='list-group' id='users'></ul>
                     <div id='startGame' style='display: none'>
@@ -103,7 +105,7 @@
                 <div class='well'>
                     <h3>Messages:</h3>
                     <div class="well" id='chat-well' style="background-color: white; overflow-y: scroll; min-height: 300px">
-                            <div id='chat'></div>
+                        <div id='chat'></div>
                     </div>
                     <hr>
                     <div class='row'>
@@ -113,7 +115,7 @@
                                     <label>Enter Message</label>
                                     <input class='form-control' id='message'></input>
                                     <br/>
-                                    <input type='submit' class='btn btn-primary' value="Send Message" id="messageSubmit"/>
+                                    <input type='submit' class='btn btn-primary' value="Send Message" id="messageSubmit" />
                                 </div>
                             </form>
                         </div>
@@ -123,7 +125,7 @@
                                 <label>Draw Something</label>
                                 <div id="drawContainer" class='well' style='background-color: white; padding:0;'></div>
                                 <br/>
-                                <input type='submit' class='btn btn-primary' value="Send Drawing" id="sendDrawing"/>
+                                <input type='submit' class='btn btn-primary' value="Send Drawing" id="sendDrawing" />
                                 <button onclick='initializeCanvas()' class='btn btn-link' id="clearCanvas">Clear Canvas</button>
                             </div>
                         </div>
@@ -131,182 +133,198 @@
                 </div>
             </div>
         </div>
-    </div>
 
 
-    <script language="javascript" type="text/javascript" src="sketch.js"></script>
-    <script>
-
-        $(function () {
-            var socket = io.connect();
-            var $messageForm = $('#messageForm');
-            var $message = $('#message');
-            var $chat = $('#chat');
-
-            var $gameSelection = $('#gameSelection')
-            var $newGameBtn = $('#newGameBtn')
-            var $joinGameBtn = $('#joinGameBtn')
-            var $gameID = $('#gameID')
-
-            var $joinGameArea = $('#joinGameArea')
-            var $joinGameForm = $('#joinGameForm')
-            var $gameIDInput = $('#gameIDInput')
 
 
-            var $messageArea = $('#messageArea');
-            var $userFormArea = $('#userFormArea');
-            var $userForm = $('#userForm');
-            var $username = $('#username');
-            var $users = $('#users');
-
-            var $drawContainer = $('#drawContainer');
-            var $sendDrawing = $('#sendDrawing')
+        <div class="row" id='gameBoard' style="display: none">
+            <div class='well'>
+                <h3>Round <span id="roundNumber">#</span></h3>
+            </div>
+        </div>
 
 
-            
+        <script language="javascript" type="text/javascript" src="sketch.js"></script>
+        <script>
 
-            $newGameBtn.click(function(){
-                socket.emit('new game');
-                $gameSelection.hide();
-                $userFormArea.show();
-                $('#username').focus();
-            });
+            $(function () {
+                var socket = io.connect();
+                var $messageForm = $('#messageForm');
+                var $message = $('#message');
+                var $chat = $('#chat');
 
-            $joinGameBtn.click(function () {
-                $gameSelection.hide();
-                $joinGameArea.show();
-                $('#gameIDInput').focus();
-            });
+                var $gameSelection = $('#gameSelection')
+                var $newGameBtn = $('#newGameBtn')
+                var $joinGameBtn = $('#joinGameBtn')
+                var $gameID = $('#gameID')
 
-            $joinGameForm.submit(function (e) {
-                e.preventDefault();
-                socket.emit('join game', $gameIDInput.val());
-                $gameIDInput.val('');
-            })
+                var $joinGameArea = $('#joinGameArea')
+                var $joinGameForm = $('#joinGameForm')
+                var $gameIDInput = $('#gameIDInput')
 
-            socket.on('game not found', function (data) {
-                $('#gameNotFound').show()
-            });
 
-            socket.on('game found', function (data) {
-                $gameID.text(data)
-                $joinGameArea.hide();
-                $userFormArea.show();
-                $('#username').focus();
-            });
+                var $messageArea = $('#messageArea');
+                var $userFormArea = $('#userFormArea');
+                var $userForm = $('#userForm');
+                var $username = $('#username');
+                var $users = $('#users');
 
-            socket.on('game joined', function (data) {
-                $gameID.text(data)
-            });
-            
-            $messageForm.submit(function (e) {
-                e.preventDefault();
-                socket.emit('send message', $message.val());
-                $message.val('');
-            })
+                var $drawContainer = $('#drawContainer');
+                var $sendDrawing = $('#sendDrawing')
 
-            socket.on('new message', function (data) {
-                if(data.type == 'txt'){
-                    $chat.append('<div class=""><strong>' + data.user + ': </strong>' + data.msg + '</div>');
-                }
-                if(data.type == 'img'){
-                    $chat.append('<div class=""><strong>' + data.user + ':</strong></div>');
-                    let img=new Image();
-                    img.src=data.msg;
-                    // img.style = "max-width: " + $('#chat').width() + "px";
-                    img.width=340;
-                    document.getElementById('chat').appendChild(img);
-                    $('#chat').append("<br>");
-                    $('#chat-well').scrollTop(document.getElementById('chat-well').scrollHeight);
-                }
-                $('#chat-well').scrollTop(document.getElementById('chat-well').scrollHeight);
-            });
+                var $startGame = $('#startGame')
 
-            $userForm.submit(function (e) {
-                e.preventDefault();
-                socket.emit('new user', $username.val(), function (data) {
-                    if (data) {
-                        $userFormArea.hide();
-                        $messageArea.show();
 
-                        $('#chat-well').height(window.innerHeight - 650);
+                $newGameBtn.click(function () {
+                    socket.emit('new game');
+                    $gameSelection.hide();
+                    $userFormArea.show();
+                    $('#username').focus();
+                });
+
+                $joinGameBtn.click(function () {
+                    $gameSelection.hide();
+                    $joinGameArea.show();
+                    $('#gameIDInput').focus();
+                });
+
+                $joinGameForm.submit(function (e) {
+                    e.preventDefault();
+                    socket.emit('join game', $gameIDInput.val());
+                    $gameIDInput.val('');
+                })
+
+                socket.on('game not found', function (data) {
+                    $('#gameNotFound').show()
+                });
+
+                socket.on('game found', function (data) {
+                    $gameID.text(data)
+                    $joinGameArea.hide();
+                    $userFormArea.show();
+                    $('#username').focus();
+                });
+
+                socket.on('game joined', function (data) {
+                    $gameID.text(data)
+                });
+
+                $messageForm.submit(function (e) {
+                    e.preventDefault();
+                    socket.emit('send message', $message.val());
+                    $message.val('');
+                })
+
+                socket.on('new message', function (data) {
+                    if (data.type == 'txt') {
+                        $chat.append('<div class=""><strong>' + data.user + ': </strong>' + data.msg + '</div>');
+                    }
+                    if (data.type == 'img') {
+                        $chat.append('<div class=""><strong>' + data.user + ':</strong></div>');
+                        let img = new Image();
+                        img.src = data.msg;
+                        // img.style = "max-width: " + $('#chat').width() + "px";
+                        img.width = 340;
+                        document.getElementById('chat').appendChild(img);
+                        $('#chat').append("<br>");
                         $('#chat-well').scrollTop(document.getElementById('chat-well').scrollHeight);
                     }
+                    $('#chat-well').scrollTop(document.getElementById('chat-well').scrollHeight);
                 });
-                $username.val('');
-            })
 
-            socket.on('get users', function (data) {
-                var html = '';
-                for (var i = 0; i < data.length; i++) {
-                    html += '<li class="list-group-item">' + data[i] + '</li>';
-                }
-                $users.html(html);
-            });
+                $userForm.submit(function (e) {
+                    e.preventDefault();
+                    socket.emit('new user', $username.val(), function (data) {
+                        if (data) {
+                            $userFormArea.hide();
+                            $messageArea.show();
 
-            // Drawing stuff
-            $sendDrawing.click(function (){
-                imgData = document.getElementById('defaultCanvas0').toDataURL()
-                socket.emit('send drawing', imgData);
-                initializeCanvas();
-            });
+                            $('#chat-well').height(window.innerHeight - 650);
+                            $('#chat-well').scrollTop(document.getElementById('chat-well').scrollHeight);
+                        }
+                    });
+                    $username.val('');
+                })
 
+                socket.on('get users', function (data) {
+                    var html = '';
+                    for (var i = 0; i < data.length; i++) {
+                        html += '<li class="list-group-item">' + data[i] + '</li>';
+                    }
+                    $users.html(html);
+                });
 
-
-            socket.on('allow start', function(){
-                $('#startGame').show();
-            });
-
-
-
-            // Mobile Controlls
-            document.getElementById('newGameBtn').addEventListener('touchend', function(e){
-                e.target.click();
-            });
-            document.getElementById('joinGameBtn').addEventListener('touchend', function(e){
-                e.target.click();
-            });
-
-            document.getElementById('gameIDInput').addEventListener('touchend', function(e){
-                e.target.focus();
-            });
-            document.getElementById('gameIDSubmit').addEventListener('touchend', function(e){
-                e.target.click();
-            });
+                // Drawing stuff
+                $sendDrawing.click(function () {
+                    imgData = document.getElementById('defaultCanvas0').toDataURL()
+                    socket.emit('send drawing', imgData);
+                    initializeCanvas();
+                });
 
 
-            document.getElementById('username').addEventListener('touchend', function(e){
-                e.target.focus();
-            });
-            document.getElementById('usernameSubmit').addEventListener('touchend', function(e){
-                e.target.click();
-            });
+
+                socket.on('allow start', function () {
+                    $('#startGame').show();
+                });
 
 
-            document.addEventListener('touchstart', function(e){
-                document.getElementById('message').blur();
-            });
-            document.getElementById('message').addEventListener('touchend', function(e){
-                e.target.focus();
-            });
-            document.getElementById('messageSubmit').addEventListener('touchend', function(e){
-                e.target.click();
-            });
 
-            document.getElementById('drawContainer').addEventListener('touchstart', function(e){
-                e.preventDefault();
-                console.log(e);
-            });
-            document.getElementById('sendDrawing').addEventListener('touchend', function(e){
-                e.target.click();
-            });
-            document.getElementById('clearCanvas').addEventListener('touchend', function(e){
-                e.target.click();
-            });
-            
+                $startGame.click(function () {
+                    $("#gameBoard").show();
+                    socket.emit('game start');
+                })
 
-        });
-    </script>
+
+
+
+                // Mobile Controlls
+                document.getElementById('newGameBtn').addEventListener('touchend', function (e) {
+                    e.target.click();
+                });
+                document.getElementById('joinGameBtn').addEventListener('touchend', function (e) {
+                    e.target.click();
+                });
+
+                document.getElementById('gameIDInput').addEventListener('touchend', function (e) {
+                    e.target.focus();
+                });
+                document.getElementById('gameIDSubmit').addEventListener('touchend', function (e) {
+                    e.target.click();
+                });
+
+
+                document.getElementById('username').addEventListener('touchend', function (e) {
+                    e.target.focus();
+                });
+                document.getElementById('usernameSubmit').addEventListener('touchend', function (e) {
+                    e.target.click();
+                });
+
+
+                document.addEventListener('touchstart', function (e) {
+                    document.getElementById('message').blur();
+                });
+                document.getElementById('message').addEventListener('touchend', function (e) {
+                    e.target.focus();
+                });
+                document.getElementById('messageSubmit').addEventListener('touchend', function (e) {
+                    e.target.click();
+                });
+
+                document.getElementById('drawContainer').addEventListener('touchstart', function (e) {
+                    e.preventDefault();
+                    console.log(e);
+                });
+                document.getElementById('sendDrawing').addEventListener('touchend', function (e) {
+                    e.target.click();
+                });
+                document.getElementById('clearCanvas').addEventListener('touchend', function (e) {
+                    e.target.click();
+                });
+
+
+            });
+        </script>
 </body>
 
 </html>
